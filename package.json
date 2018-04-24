@@ -8,12 +8,14 @@
   "dependencies": {
     "dotenv-safe": "^5.0.1",
     "got": "^8.3.0",
+    "graphql": "^0.13.2",
     "hasha": "^3.0.0",
     "ioredis": "^3.2.2",
     "kcors": "^2.2.1",
     "koa": "^2.5.0",
     "koa-bodyparser": "^4.2.0",
-    "koa-error": "^3.2.0"
+    "koa-error": "^3.2.0",
+    "lodash": "^4.17.9"
   },
   "devDependencies": {
     "eslint": "^4.19.1",
