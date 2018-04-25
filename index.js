@@ -1,11 +1,11 @@
 require('./env')
 
 const app = new (require('koa'))()
-const got = require('got')
 
 const cache = require('./cache')
 const check = require('./check')
 const hash = require('./hash')
+const request = require('./request')
 
 app.proxy = true
 app.silent = true
@@ -18,24 +18,27 @@ app.use(async ctx => {
   const key = `${hash(query)}${hash(variables)}`
   const ignored = check.ignored(query, variables)
 
-  if (!ignored) {
-    const cached = await cache.get(key)
-    if (cached) {
-      ctx.body = cached
-      return
-    }
+  if (ignored) {
+    const r = await request(ctx.request.body, ctx.request.headers)
+    ctx.response.body = r.body
+    ctx.response.headers = r.headers
+    return
   }
 
-  const r = await got.post(process.env.GRAPHQL_URL, {
-    json: true,
-    body: ctx.request.body,
-    headers: ctx.request.header,
+  const cached = await cache.get(key)
+  if (cached) {
+    ctx.response.body = cached.body
+    ctx.response.headers = cached.headers
+    return
+  }
+
+  const r = await request(ctx.request.body, ctx.request.headers)
+  await cache.set(key, {
+    body: r.body,
+    headers: r.headers,
   })
-
-  if (!ignored) {
-    await cache.set(key, r.body)
-  }
-  ctx.body = r.body
+  ctx.response.body = r.body
+  ctx.response.headers = r.headers
 })
 
 app.listen(process.env.PORT, function () {
